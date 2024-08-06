@@ -18,7 +18,7 @@ struct init {
         .grid_size = {16, 16},
     });
 
-    // atlas("??");
+    atlas("atlas.png");
     // data(??);
   }
 };
