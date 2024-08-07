@@ -2,11 +2,21 @@
 #pragma leco add_resource "atlas.png"
 
 import casein;
+import dotz;
 import quack;
+
+static dotz::vec2 player_pos{};
+
+static void redraw();
+
+static void move(float dx, float dy) {
+  player_pos = player_pos + dotz::vec2{dx, dy} * 0.5f;
+  redraw();
+}
 
 static unsigned data(quack::instance *is) {
   *is = quack::instance{
-      .position{0, 0},
+      .position = player_pos,
       .size{1, 1},
       .uv0{0.0f / 16.0f, 1.0f / 16.0f},
       .uv1{1.0f / 16.0f, 2.0f / 16.0f},
@@ -14,6 +24,8 @@ static unsigned data(quack::instance *is) {
   };
   return 1;
 }
+
+static void redraw() { quack::donald::data(::data); }
 
 struct init {
   init() {
@@ -33,5 +45,10 @@ struct init {
 
     atlas("atlas.png");
     data(::data);
+
+    handle(KEY_DOWN, K_W, [] { move(0, -1); });
+    handle(KEY_DOWN, K_S, [] { move(0, +1); });
+    handle(KEY_DOWN, K_A, [] { move(-1, 0); });
+    handle(KEY_DOWN, K_D, [] { move(+1, 0); });
   }
 } i;
