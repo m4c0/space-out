@@ -7,8 +7,8 @@ import quack;
 
 enum buttons { B_UP = 0, B_DOWN, B_LEFT, B_RIGHT, B_COUNT };
 
-static dotz::vec2 player_pos{};
-static bool button_state[B_COUNT]{};
+static dotz::vec2 player_pos {};
+static bool button_state[B_COUNT] {};
 
 static void redraw();
 
@@ -22,7 +22,7 @@ static float axis(buttons n, buttons p) {
 }
 
 static unsigned data(quack::instance *is) {
-  *is = quack::instance{
+  *is = quack::instance {
     .position = player_pos,
     .size = { 1, 1 },
     .uv0 = { 0.0f / 16.0f, 1.0f / 16.0f },
@@ -35,11 +35,16 @@ static unsigned data(quack::instance *is) {
 static void redraw() { quack::donald::data(::data); }
 
 static void process_input() {
-  dotz::vec2 d{ axis(B_LEFT, B_RIGHT), axis(B_UP, B_DOWN) };
+  dotz::vec2 d { axis(B_LEFT, B_RIGHT), axis(B_UP, B_DOWN) };
   if (dotz::length(d) < 0.001) return;
 
-  player_pos = player_pos + d * 0.5f;
+  player_pos = player_pos + d * 0.25f;
   redraw();
+}
+
+static void handle_btn(casein::keys k, buttons b) {
+  casein::handle(casein::KEY_DOWN, k, [=] { button_state[b] = true; });
+  casein::handle(casein::KEY_UP, k, [=] { button_state[b] = false; });
 }
 
 struct init {
@@ -61,16 +66,11 @@ struct init {
     atlas("atlas.png");
     data(::data);
 
-    handle(KEY_DOWN, K_W, [] { button_state[B_UP] = true; });
-    handle(KEY_DOWN, K_S, [] { button_state[B_DOWN] = true; });
-    handle(KEY_DOWN, K_A, [] { button_state[B_LEFT] = true; });
-    handle(KEY_DOWN, K_D, [] { button_state[B_RIGHT] = true; });
+    handle_btn(K_W, B_UP);
+    handle_btn(K_S, B_DOWN);
+    handle_btn(K_A, B_LEFT);
+    handle_btn(K_D, B_RIGHT);
 
-    handle(KEY_UP, K_W, [] { button_state[B_UP] = false; });
-    handle(KEY_UP, K_S, [] { button_state[B_DOWN] = false; });
-    handle(KEY_UP, K_A, [] { button_state[B_LEFT] = false; });
-    handle(KEY_UP, K_D, [] { button_state[B_RIGHT] = false; });
-
-    handle(TIMER, process_input);
+    handle(TIMER, &process_input);
   }
 } i;
