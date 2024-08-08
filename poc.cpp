@@ -33,9 +33,11 @@ static unsigned data(quack::instance * is) {
   };
 
   *is++ = quack::instance {
-    .position = quack::donald::mouse_pos(),
+    .position = quack::donald::mouse_pos() - 0.5f,
     .size = { 1, 1 },
-    .colour = { 1, 1, 1, 1 },
+    .uv0 = { 1.0f / 16.0f, 0.0f / 16.0f },
+    .uv1 = { 2.0f / 16.0f, 1.0f / 16.0f },
+    .multiplier = { 1, 1, 1, 1 },
   };
 
   return is - b;
