@@ -32,13 +32,16 @@ static unsigned data(quack::instance * is) {
     .multiplier = { 1, 1, 1, 1 },
   };
 
+  auto cursor = dotz::floor(quack::donald::mouse_pos());
+  if (dotz::length(cursor - player_pos) <= 3) {
   *is++ = quack::instance {
-    .position = quack::donald::mouse_pos() - 0.5f,
+    .position = cursor,
     .size = { 1, 1 },
     .uv0 = { 1.0f / 16.0f, 0.0f / 16.0f },
     .uv1 = { 2.0f / 16.0f, 1.0f / 16.0f },
     .multiplier = { 1, 1, 1, 1 },
   };
+  }
 
   return is - b;
 }
