@@ -4,6 +4,7 @@
 import casein;
 import dotz;
 import quack;
+import silog;
 
 enum buttons { B_UP = 0, B_DOWN, B_LEFT, B_RIGHT, B_COUNT };
 
@@ -21,15 +22,23 @@ static float axis(buttons n, buttons p) {
   return 0;
 }
 
-static unsigned data(quack::instance *is) {
-  *is = quack::instance {
+static unsigned data(quack::instance * is) {
+  const auto b = is;
+  *is++ = quack::instance {
     .position = player_pos,
     .size = { 1, 1 },
     .uv0 = { 0.0f / 16.0f, 1.0f / 16.0f },
     .uv1 = { 1.0f / 16.0f, 2.0f / 16.0f },
     .multiplier = { 1, 1, 1, 1 },
   };
-  return 1;
+
+  *is++ = quack::instance {
+    .position = quack::donald::mouse_pos(),
+    .size = { 1, 1 },
+    .colour = { 1, 1, 1, 1 },
+  };
+
+  return is - b;
 }
 
 static void redraw() { quack::donald::data(::data); }
@@ -72,5 +81,6 @@ struct init {
     handle_btn(K_D, B_RIGHT);
 
     handle(TIMER, &process_input);
+    handle(MOUSE_MOVE, &redraw);
   }
 } i;
