@@ -3,6 +3,7 @@
 
 import casein;
 import dotz;
+import hai;
 import quack;
 import silog;
 
@@ -10,6 +11,8 @@ enum buttons { B_UP = 0, B_DOWN, B_LEFT, B_RIGHT, B_COUNT };
 
 static dotz::vec2 player_pos {};
 static bool button_state[B_COUNT] {};
+
+static hai::varray<dotz::vec2> dots { 1024 };
 
 static void redraw();
 
@@ -32,15 +35,25 @@ static unsigned data(quack::instance * is) {
     .multiplier = { 1, 1, 1, 1 },
   };
 
+  for (auto p : dots) {
+    *is++ = quack::instance {
+      .position = p,
+      .size = { 1, 1 },
+      .uv0 = { 0.0f / 16.0f, 3.0f / 16.0f },
+      .uv1 = { 1.0f / 16.0f, 4.0f / 16.0f },
+      .multiplier = { 1, 1, 1, 1 },
+    };
+  }
+
   auto cursor = dotz::floor(quack::donald::mouse_pos());
   if (dotz::length(cursor - player_pos) <= 3) {
-  *is++ = quack::instance {
-    .position = cursor,
-    .size = { 1, 1 },
-    .uv0 = { 1.0f / 16.0f, 0.0f / 16.0f },
-    .uv1 = { 2.0f / 16.0f, 1.0f / 16.0f },
-    .multiplier = { 1, 1, 1, 1 },
-  };
+    *is++ = quack::instance {
+      .position = cursor,
+      .size = { 1, 1 },
+      .uv0 = { 1.0f / 16.0f, 0.0f / 16.0f },
+      .uv1 = { 2.0f / 16.0f, 1.0f / 16.0f },
+      .multiplier = { 1, 1, 1, 1 },
+    };
   }
 
   return is - b;
@@ -59,6 +72,24 @@ static void process_input() {
 static void handle_btn(casein::keys k, buttons b) {
   casein::handle(casein::KEY_DOWN, k, [=] { button_state[b] = true; });
   casein::handle(casein::KEY_UP, k, [=] { button_state[b] = false; });
+}
+
+static void ctor() {
+  auto cursor = dotz::floor(quack::donald::mouse_pos());
+  if (dotz::length(cursor - player_pos) <= 3) {
+    dots.push_back(cursor);
+  }
+}
+static void dtor() {
+  auto cursor = dotz::floor(quack::donald::mouse_pos());
+  if (dotz::length(cursor - player_pos) <= 3) {
+    for (auto i = 0; i < dots.size(); i++) {
+      if (dotz::length(dots[i] - cursor) < 0.001f) {
+        dots[i] = dots.pop_back();
+        return;
+      }
+    }
+  }
 }
 
 struct init {
@@ -87,5 +118,8 @@ struct init {
 
     handle(TIMER, &process_input);
     handle(MOUSE_MOVE, &redraw);
+
+    handle(MOUSE_DOWN, M_LEFT, &ctor);
+    handle(MOUSE_DOWN, M_RIGHT, &dtor);
   }
 } i;
