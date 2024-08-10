@@ -52,7 +52,7 @@ static unsigned data(quack::instance * is) {
     });
   }
 
-  auto cursor = dotz::floor(quack::donald::mouse_pos());
+  auto cursor = dotz::floor(quack::donald::mouse_pos() + camera_pos);
   if (dotz::length(cursor - player_pos) <= 3) {
     blit(is, quack::instance {
       .position = cursor,
@@ -68,9 +68,11 @@ static void redraw() { quack::donald::data(::data); }
 
 static void process_input() {
   dotz::vec2 d { axis(B_LEFT, B_RIGHT), axis(B_UP, B_DOWN) };
-  if (dotz::length(d) < 0.001) return;
+  if (dotz::length(d) > 0.001)
+    player_pos = player_pos + d * 0.25f;
 
-  player_pos = player_pos + d * 0.25f;
+  camera_pos = player_pos;
+
   redraw();
 }
 
@@ -80,13 +82,13 @@ static void handle_btn(casein::keys k, buttons b) {
 }
 
 static void ctor() {
-  auto cursor = dotz::floor(quack::donald::mouse_pos());
+  auto cursor = dotz::floor(quack::donald::mouse_pos() + camera_pos);
   if (dotz::length(cursor - player_pos) <= 3) {
     dots.push_back(cursor);
   }
 }
 static void dtor() {
-  auto cursor = dotz::floor(quack::donald::mouse_pos());
+  auto cursor = dotz::floor(quack::donald::mouse_pos() + camera_pos);
   if (dotz::length(cursor - player_pos) <= 3) {
     for (auto i = 0; i < dots.size(); i++) {
       if (dotz::length(dots[i] - cursor) < 0.001f) {
