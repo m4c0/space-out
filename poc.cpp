@@ -9,6 +9,7 @@ import silog;
 
 enum buttons { B_UP = 0, B_DOWN, B_LEFT, B_RIGHT, B_COUNT };
 
+static dotz::vec2 camera_pos {};
 static dotz::vec2 player_pos {};
 static bool button_state[B_COUNT] {};
 
@@ -25,35 +26,39 @@ static float axis(buttons n, buttons p) {
   return 0;
 }
 
+static void blit(quack::instance *&is, quack::instance i) {
+  i.position = i.position - camera_pos;
+  i.size = { 1 };
+  i.uv0 = i.uv0 / 16.0f;
+  i.uv1 = i.uv1 / 16.0f;
+  i.multiplier = { 1 };
+  *is++ = i;
+}
+
 static unsigned data(quack::instance * is) {
   const auto b = is;
-  *is++ = quack::instance {
+
+  blit(is, quack::instance {
     .position = player_pos,
-    .size = { 1, 1 },
-    .uv0 = { 0.0f / 16.0f, 1.0f / 16.0f },
-    .uv1 = { 1.0f / 16.0f, 2.0f / 16.0f },
-    .multiplier = { 1, 1, 1, 1 },
-  };
+    .uv0 = {0, 1},
+    .uv1 = {1, 2},
+  });
 
   for (auto p : dots) {
-    *is++ = quack::instance {
+    blit(is, quack::instance {
       .position = p,
-      .size = { 1, 1 },
-      .uv0 = { 0.0f / 16.0f, 3.0f / 16.0f },
-      .uv1 = { 1.0f / 16.0f, 4.0f / 16.0f },
-      .multiplier = { 1, 1, 1, 1 },
-    };
+      .uv0 = {0, 3},
+      .uv1 = {1, 4},
+    });
   }
 
   auto cursor = dotz::floor(quack::donald::mouse_pos());
   if (dotz::length(cursor - player_pos) <= 3) {
-    *is++ = quack::instance {
+    blit(is, quack::instance {
       .position = cursor,
-      .size = { 1, 1 },
-      .uv0 = { 1.0f / 16.0f, 0.0f / 16.0f },
-      .uv1 = { 2.0f / 16.0f, 1.0f / 16.0f },
-      .multiplier = { 1, 1, 1, 1 },
-    };
+      .uv0 = {1, 0},
+      .uv1 = {2, 1},
+    });
   }
 
   return is - b;
