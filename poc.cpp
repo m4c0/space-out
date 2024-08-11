@@ -114,7 +114,7 @@ struct init {
     app_name("spaceout-poc");
     max_quads(1024);
 
-    clear_colour({});
+    clear_colour({ 0, 0, 0, 1 });
     push_constants({
         .grid_pos = { 0, 0 },
         .grid_size = { 16, 16 },
