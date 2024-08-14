@@ -72,9 +72,10 @@ static void process_input(float dt) {
 }
 static void process_camera(float dt) {
   auto delta = dotz::abs(camera_pos - player_pos);
+  dt *= 0.8;
 
-  if (delta.x >= 5) camera_pos.x = dotz::mix(camera_pos.x, player_pos.x, dt);
-  if (delta.y >= 5) camera_pos.y = dotz::mix(camera_pos.y, player_pos.y, dt);
+  if (delta.x >= 3) camera_pos.x = dotz::mix(camera_pos.x, player_pos.x, dt);
+  if (delta.y >= 3) camera_pos.y = dotz::mix(camera_pos.y, player_pos.y, dt);
 
   quack::donald::push_constants({
     .grid_pos = camera_pos,
