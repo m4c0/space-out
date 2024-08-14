@@ -6,16 +6,16 @@ import dotz;
 import hai;
 import quack;
 import silog;
+import sitime;
 
 enum buttons { B_UP = 0, B_DOWN, B_LEFT, B_RIGHT, B_COUNT };
 
 static dotz::vec2 camera_pos {};
 static dotz::vec2 player_pos {};
 static bool button_state[B_COUNT] {};
+static sitime::stopwatch last_frame {};
 
 static hai::varray<dotz::vec2> dots { 1024 };
-
-static void redraw();
 
 static float axis(buttons n, buttons p) {
   auto ns = button_state[n];
@@ -62,23 +62,30 @@ static unsigned data(quack::instance * is) {
 
   return is - b;
 }
+static void load_data() { quack::donald::data(::data); }
 
-static void redraw() { quack::donald::data(::data); }
-
-static void process_input() {
+static void process_input(float dt) {
   dotz::vec2 d { axis(B_LEFT, B_RIGHT), axis(B_UP, B_DOWN) };
   if (dotz::length(d) > 0.001)
-    player_pos = player_pos + d * 0.25f;
+    player_pos = player_pos + d * dt * 4.0f;
 
-  redraw();
 }
-
-static void repaint() {
-  camera_pos = dotz::mix(camera_pos, player_pos, 0.000005);
+static void process_camera(float dt) {
+  camera_pos = dotz::mix(camera_pos, player_pos, dt);
   quack::donald::push_constants({
     .grid_pos = camera_pos,
     .grid_size = { 16, 16 },
   });
+}
+
+static void repaint() {
+  float dt = last_frame.millis() / 1000.0f;
+  last_frame = {};
+
+  process_input(dt);
+  process_camera(dt);
+
+  load_data();
 }
 
 static void handle_btn(casein::keys k, buttons b) {
@@ -121,15 +128,13 @@ struct init {
     });
 
     atlas("atlas.png");
-    data(::data);
+    load_data();
 
     handle_btn(K_W, B_UP);
     handle_btn(K_S, B_DOWN);
     handle_btn(K_A, B_LEFT);
     handle_btn(K_D, B_RIGHT);
 
-    handle(TIMER, &process_input);
-    handle(MOUSE_MOVE, &redraw);
     handle(REPAINT, &repaint);
 
     handle(MOUSE_DOWN, M_LEFT, &ctor);
