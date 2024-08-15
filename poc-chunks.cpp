@@ -7,24 +7,20 @@ import quack;
 
 static hai::varray<dotz::vec2> dots { 1024 };
 
-static unsigned data(quack::instance *is) {
-  const auto b = is;
-
+static void data(quack::instance *& is) {
   *is++ = {
     .position = dotz::floor(quack::donald::mouse_pos()),
     .size = { 1 },
     .colour = { 1, 0, 0, 1 },
   };
 
-  for (auto &d : dots) {
+  for (auto & d : dots) {
     *is++ = {
       .position = d + dotz::vec2 { 0.1f },
       .size = { 0.8f },
       .colour = { 0, 1, 0, 1 },
     };
   }
-
-  return is - b;
 }
 
 static void redraw() { quack::donald::data(::data); }
@@ -58,8 +54,8 @@ static struct init {
     clear_colour({ 0, 0, 0, 1 });
 
     push_constants({
-      .grid_pos = { 0, 0 },
-      .grid_size = { 32, 32 },
+        .grid_pos = { 0, 0 },
+        .grid_size = { 32, 32 },
     });
 
     data(::data);
@@ -69,4 +65,3 @@ static struct init {
     handle(MOUSE_DOWN, M_RIGHT, &dtor);
   }
 } i;
-

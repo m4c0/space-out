@@ -4,29 +4,18 @@
 import casein;
 import dotz;
 import hai;
+import input;
 import quack;
 import silog;
 import sitime;
 
-enum buttons { B_UP = 0, B_DOWN, B_LEFT, B_RIGHT, B_COUNT };
-
 static dotz::vec2 camera_pos {};
 static dotz::vec2 player_pos {};
-static bool button_state[B_COUNT] {};
 static sitime::stopwatch last_frame {};
 
 static hai::varray<dotz::vec2> dots { 1024 };
 
-static float axis(buttons n, buttons p) {
-  auto ns = button_state[n];
-  auto ps = button_state[p];
-
-  if (ns && !ps) return -1;
-  if (ps && !ns) return +1;
-  return 0;
-}
-
-static void blit(quack::instance *&is, quack::instance i) {
+static void blit(quack::instance *& is, quack::instance i) {
   i.size = { 1 };
   i.uv0 = i.uv0 / 16.0f;
   i.uv1 = i.uv1 / 16.0f;
@@ -34,9 +23,7 @@ static void blit(quack::instance *&is, quack::instance i) {
   *is++ = i;
 }
 
-static unsigned data(quack::instance * is) {
-  const auto b = is;
-
+static void data(quack::instance *& is) {
   blit(is, quack::instance {
     .position = player_pos,
     .uv0 = {0, 1},
@@ -59,17 +46,14 @@ static unsigned data(quack::instance * is) {
       .uv1 = {2, 1},
     });
   }
-
-  return is - b;
 }
 static void load_data() { quack::donald::data(::data); }
 
 static void process_input(float dt) {
-  dotz::vec2 d { axis(B_LEFT, B_RIGHT), axis(B_UP, B_DOWN) };
-  if (dotz::length(d) > 0.001)
-    player_pos = player_pos + d * dt * 4.0f;
-
+  auto d = input::left_stick();
+  if (dotz::length(d) > 0.001) player_pos = player_pos + d * dt * 4.0f;
 }
+
 static void process_camera(float dt) {
   auto delta = dotz::abs(camera_pos - player_pos);
   dt *= 0.8;
@@ -78,8 +62,8 @@ static void process_camera(float dt) {
   if (delta.y >= 3) camera_pos.y = dotz::mix(camera_pos.y, player_pos.y, dt);
 
   quack::donald::push_constants({
-    .grid_pos = camera_pos,
-    .grid_size = { 16, 16 },
+      .grid_pos = camera_pos,
+      .grid_size = { 16, 16 },
   });
 }
 
@@ -91,11 +75,6 @@ static void repaint() {
   process_camera(dt);
 
   load_data();
-}
-
-static void handle_btn(casein::keys k, buttons b) {
-  casein::handle(casein::KEY_DOWN, k, [=] { button_state[b] = true; });
-  casein::handle(casein::KEY_UP, k, [=] { button_state[b] = false; });
 }
 
 static void ctor() {
@@ -135,10 +114,7 @@ struct init {
     atlas("atlas.png");
     load_data();
 
-    handle_btn(K_W, B_UP);
-    handle_btn(K_S, B_DOWN);
-    handle_btn(K_A, B_LEFT);
-    handle_btn(K_D, B_RIGHT);
+    input::setup_defaults();
 
     handle(REPAINT, &repaint);
 
