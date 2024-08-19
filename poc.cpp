@@ -15,6 +15,9 @@ static sitime::stopwatch last_frame {};
 
 static hai::varray<dotz::vec2> dots { 1024 };
 
+static quack::yakki::buffer * g_buffer;
+static quack::yakki::image * g_atlas;
+
 static void blit(quack::instance *& is, quack::instance i) {
   i.size = { 1 };
   i.uv0 = i.uv0 / 16.0f;
@@ -38,7 +41,9 @@ static void data(quack::instance *& is) {
     });
   }
 
-  auto cursor = dotz::floor(quack::donald::mouse_pos());
+  if (!g_buffer) return;
+
+  auto cursor = dotz::floor(g_buffer->mouse_pos());
   if (dotz::length(cursor - player_pos) <= 3) {
     blit(is, quack::instance {
       .position = cursor,
@@ -47,7 +52,6 @@ static void data(quack::instance *& is) {
     });
   }
 }
-static void load_data() { quack::donald::data(::data); }
 
 static void process_input(float dt) {
   auto d = input::left_stick();
@@ -61,30 +65,32 @@ static void process_camera(float dt) {
   if (delta.x >= 3) camera_pos.x = dotz::mix(camera_pos.x, player_pos.x, dt);
   if (delta.y >= 3) camera_pos.y = dotz::mix(camera_pos.y, player_pos.y, dt);
 
-  quack::donald::push_constants({
+  g_buffer->pc() = {
       .grid_pos = camera_pos,
       .grid_size = { 16, 16 },
-  });
+  };
 }
 
 static void repaint() {
+  if (!g_buffer) return;
+
   float dt = last_frame.millis() / 1000.0f;
   last_frame = {};
 
   process_input(dt);
   process_camera(dt);
 
-  load_data();
+  g_buffer->run_once();
 }
 
 static void ctor() {
-  auto cursor = dotz::floor(quack::donald::mouse_pos());
+  auto cursor = dotz::floor(g_buffer->mouse_pos());
   if (dotz::length(cursor - player_pos) <= 3) {
     dots.push_back(cursor);
   }
 }
 static void dtor() {
-  auto cursor = dotz::floor(quack::donald::mouse_pos());
+  auto cursor = dotz::floor(g_buffer->mouse_pos());
   if (dotz::length(cursor - player_pos) <= 3) {
     for (auto i = 0; i < dots.size(); i++) {
       if (dotz::length(dots[i] - cursor) < 0.001f) {
@@ -98,21 +104,19 @@ static void dtor() {
 struct init {
   init() {
     using namespace casein;
-    using namespace quack::donald;
 
     window_title = "SpaceOut proof-of-concept";
 
-    app_name("spaceout-poc");
-    max_quads(1024);
-
-    clear_colour({ 0, 0, 0, 1 });
-    push_constants({
+    quack::yakki::on_start = [](quack::yakki::resources * r) {
+      g_buffer = r->buffer(1024, data);
+      g_buffer->pc() = {
         .grid_pos = { 0, 0 },
         .grid_size = { 16, 16 },
-    });
+      };
 
-    atlas("atlas.png");
-    load_data();
+      g_atlas = r->image("atlas.png");
+    };
+    quack::yakki::on_frame = [](quack::yakki::renderer * r) { r->run(g_buffer, g_atlas); };
 
     input::setup_defaults();
 
